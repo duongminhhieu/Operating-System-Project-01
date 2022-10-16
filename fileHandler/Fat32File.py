@@ -50,7 +50,8 @@ class FATVolume(AbstractVolume):
         self.root_cluster = getValueOfBufferByOffset(bootsec_buffer, 0x2C, 4)
         # Chỉ số sector bắt đầu của data 
         self.data_begin_sector = self.sb + self.nf * self.sf
-
+        print('\n\n----------------------FAT32----------------------')
+        print('--------------PARTITION BOOT SECTOR--------------\n')
         print('Volume information:')
         print('Bytes per sector:', self.bps)
         print('Sectors per cluster (Sc):', self.sc)

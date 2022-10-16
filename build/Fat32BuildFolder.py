@@ -108,10 +108,10 @@ class BuildFat32:
         print(  '--help:    in ra các lệnh hướng dẫn\n' +
                 '--cd:      đi vào hoặc ra thư mục\n' +
                 '--ls:      lấy các tập tin đang có trong thư mục\n' + 
-                '--cls:     xóa màn hình\n' +
-                '--root:    lấy cây thư mục\n' +
+                '--cls:     xóa màn hình\n' + ######
+                '--root:    lấy cây thư mục\n' + ######
                 '--cat:     đi vào file\n' + 
-                '--detail:  lấy chi tiết một tập tin\n' +
+                '--detail:  lấy chi tiết một tập tin\n' + ######
                 '--exit:    thoát khỏi file hoặc chương trình'
             )
 
