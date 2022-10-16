@@ -1,7 +1,9 @@
 from msilib.schema import Directory
+from build.Fat32BuildFolder import BuildFat32
 from utils.disk import Disk
 from utils.buffer import *
 from fileHandler.Fat32File import *
+from build.Fat32BuildFolder import *
 
 def main():
     try:
@@ -15,6 +17,7 @@ def main():
 
         #main
         #generate directory
+        #oo dia goc
         directory = disk.generateDirectory()
 
         #check ntfs disk or fat32 
@@ -23,11 +26,17 @@ def main():
         ntfs_volfs = getBufferDataByOffset(bootsec_buffer, 3, 4)
 
         if b'FAT32' in fat32_volfs:
-            fat32File = disk.generateFAT32File(file, directory)
+            fat32File = disk.generateFAT32File(file)
             #demo handle PARTITION BOOT SECTOR
             print('\n\n----------------------FAT32----------------------')
             print('--------------PARTITION BOOT SECTOR--------------\n')
-            fat32File.readPartitionRootSector()
+
+            fat32File.root_directory.build_tree()
+            current_dir = fat32File.root_directory
+            buildFat32 = BuildFat32(current_dir, fat32File)
+            buildFat32.start_shell()
+
+
         elif b'NTFS' in ntfs_volfs:
             #create new tnfs file system
             ntfsFile = disk.generateNTFSFile(file, directory)

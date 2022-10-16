@@ -40,9 +40,8 @@ class Disk:
         return ntfsFile
     
     #tạo 1 FAT32 file container để xử lý file vừa đọc
-    def generateFAT32File(self, file, directory):
-        root = CFolder(self.diskPath[-2], f'{self.diskPath[-2]}:')
-        fatFile = FATVolume(file, root, directory)
+    def generateFAT32File(self, file):
+        fatFile = FATVolume(file)
         return fatFile
 
     #tạo 1 directory để lưu trữ các parent index của 1 folder hoặc file

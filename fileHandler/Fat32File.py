@@ -8,17 +8,28 @@ from constant.document import *
 from pattern.composite import *
 from build.console import *
 
-class FATVolume:
+class FATVolume(AbstractVolume):
+    # Override các abstract attribute 
+    # Trong python để "khai báo" là mình sẽ override các abstract attribute của class cha thì mình khởi tạo giá trị đầu cho nó (ở đây khởi tạo là None [giống null của C++])
+    root_directory = None 
+    size = None
+    volume_label = None 
+    file_object = None
 
-    def __init__(self, file, root:CItem, directory:Directory):
-        self.file = file
-        self.root:CItem = root
-        self.directory = directory
+    def __init__(self, file_object):
+        """
+        Constructor nhận vào 1 tham số là `file_object`, là một Python file object.
+        
+        TODO: constructor sẽ làm các yêu cầu sau:
+        - Đọc các thông tin volume cần thiết: SC, SB, NF, ...
+        - Đọc bảng FAT vào biến fat_table_buffer.
+        - Đọc RDET vào biến rdet_buffer.
+        - Dựng cây thư mục gốc từ RDET và lưu vào self.root_directory.
+        """
+        self.file_object = file_object
 
-
-    def readPartitionRootSector(self):
         # Đọc boot sector
-        bootsec_buffer = getBufferDataBySector(self.file, 0, 1) # đọc sector thứ 0 (sector đầu tiên) và đọc 1 sector
+        bootsec_buffer = getBufferDataBySector(self.file_object, 0, 1) # đọc sector thứ 0 (sector đầu tiên) và đọc 1 sector
 
         # Đọc magic number 0xAA55
         # Đọc 2 byte tại offset 0x1FA
@@ -40,7 +51,7 @@ class FATVolume:
         # Chỉ số sector bắt đầu của data 
         self.data_begin_sector = self.sb + self.nf * self.sf
 
-        print('--- Volume information ---')
+        print('Volume information:')
         print('Bytes per sector:', self.bps)
         print('Sectors per cluster (Sc):', self.sc)
         print('Reserved sectors (Sb):', self.sb)
@@ -51,16 +62,16 @@ class FATVolume:
         print('\n')
 
         # Đọc bảng FAT (sf byte tại offset sb)
-        self.fat_table_buffer = getBufferDataBySector(self.file, self.sb, self.sf, self.bps)
+        self.fat_table_buffer = getBufferDataBySector(self.file_object, self.sb, self.sf, self.bps)
 
         # RDET buffer
         rdet_cluster_chain = self.read_cluster_chain(self.root_cluster)
         rdet_sector_chain = self.cluster_chain_to_sector_chain(rdet_cluster_chain)
-        rdet_buffer = getContentByCluster(self.file, rdet_sector_chain, self.bps)
+        rdet_buffer = read_sector_chain(self.file_object, rdet_sector_chain, self.bps)
 
-        self.directory = FATDirectory(rdet_buffer, '', self, isrdet=True)
-        # self.root = getBufferDataByOffset(bootsec_buffer, 0x2B, 11).decode('utf-8', errors='ignore')
-        # self.directory.name = self.root
+        self.root_directory = FATDirectory(rdet_buffer, '', self, isrdet=True)
+        # self.volume_label = getBufferDataByOffset(bootsec_buffer, 0x2B, 11).decode('utf-8', errors='ignore')
+        # self.root_directory.name = self.volume_label
 
     def read_cluster_chain(self, n) -> list: 
         """
@@ -114,7 +125,7 @@ class FATVolume:
         return name
 
 
-class FATDirectory():
+class FATDirectory(AbstractDirectory):
     """
     Lớp đối tượng thể hiện một thư mục trong FAT
     """
@@ -170,7 +181,7 @@ class FATDirectory():
         subentry_index = 0
 
         # Đọc SDET (dữ liệu nhị phân) của thư mục
-        sdet_buffer = getContentByCluster(self.volume.file, self.sectors, self.volume.bps)
+        sdet_buffer = read_sector_chain(self.volume.file_object, self.sectors, self.volume.bps)
         lfn_entries_queue = []
 
         while True:
@@ -208,7 +219,7 @@ class FATDirectory():
         
         return desc_str
 
-class FATFile():
+class FATFile(AbstractFile):
     volume = None 
     name = None 
     attr = None 
@@ -257,7 +268,7 @@ class FATFile():
         """
         Trả về mảng các byte của tập tin
         """
-        binary_data = getContentByCluster(self.volume.file, self.sectors, self.volume.bps)
+        binary_data = read_sector_chain(self.volume.file_object, self.sectors, self.volume.bps)
         # "trim" bớt cho về đúng kích thước
         return binary_data[:self.size]
 
@@ -276,3 +287,4 @@ class FATFile():
                 desc_str += desc_map[attribute]
         
         return desc_str
+

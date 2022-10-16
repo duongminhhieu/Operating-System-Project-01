@@ -40,3 +40,13 @@ def getContentByCluster(file, begin, clusters, sc, bts=512):
         content = content + getBufferDataBySector(file, sector, 1, bts)
 
     return content
+
+def read_sector_chain(file_object, sector_list, bps=512):
+    """
+    Hàm đọc một dãy các sector từ mảng.
+    Trả về: buffer đọc được.
+    """
+    buffer = b''
+    for sector in sector_list:
+        buffer += getBufferDataBySector(file_object, sector, 1, bps)
+    return buffer
